@@ -1,3 +1,7 @@
+streamlit
+pandas
+reportlab
+
 altair==5.5.0
 attrs==25.3.0
 bcrypt==4.3.0
