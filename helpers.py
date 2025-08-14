@@ -619,6 +619,23 @@ def set_background(image_file="assets/fl.png"):
     st.markdown(background_style, unsafe_allow_html=True)
 
 
+import streamlit as st
+import base64
+
+def set_background(image_file="assets/fl.png"):
+    with open(image_file, "rb") as f:
+        base64_image = base64.b64encode(f.read()).decode()
+
+    background_style = f"""
+        <style>
+            .stApp {{
+                background-image: url("data:image/png;base64,{base64_image}");
+                background-size: cover;
+            }}
+        </style>
+    """
+    st.markdown(background_style, unsafe_allow_html=True)
+
 def send_sms(to_number, message):
     """Mock SMS sender - no Twilio call"""
     print(f"📩 [MOCK] SMS to {to_number}: {message}")
