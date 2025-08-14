@@ -1,5 +1,5 @@
 import streamlit as st
-from ui import set_background
+from helpers import set_background
 from selections.student import run_student_mode
 from selections.admin import run_admin_mode
 
