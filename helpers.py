@@ -343,20 +343,6 @@ def change_admin_password_ui():
         st.success("? Password updated successfully.")
 
 
-#from twilio.rest import Client
-
-
-#def send_sms(to_number, message):
-    account_sid = "AC4399e9ec3d2f6ca3b062e44bc44ca8c1"
-    auth_token = "089ec38252046b0daaad7e93705b83ef"
-   # client = Client(account_sid, auth_token)
-
-   # client.messages.create(
-       # body=message,
-       # from_='+2330593007281',  # your Twilio number
-        #to=to_number
-   # )
-
 
 RETAKE_FILE = "retake_tracker.json"
 
@@ -592,3 +578,47 @@ def load_users_dict():
     except FileNotFoundError:
         pass
     return users_dict
+
+def show_header():
+    st.markdown("<h2 style='text-align: center;'>?? SmartTest Student Portal</h2>", unsafe_allow_html=True)
+    st.write("Welcome to your personalized test center.")
+
+def layout_top_controls(class_name, subject_name, duration):
+    col1, col2 = st.columns(2)
+    with col1:
+        st.info(f"?? Class: **{class_name}**")
+        st.info(f"?? Subject: **{subject_name}**")
+    with col2:
+        from datetime import datetime
+
+        if "test_start_time" in st.session_state and "test_end_time" in st.session_state:
+            now = datetime.now()
+            remaining = st.session_state.test_end_time - now
+            if remaining.total_seconds() > 0:
+                minutes, seconds = divmod(int(remaining.total_seconds()), 60)
+                st.success(f"Time Remaining: {minutes:02}:{seconds:02}")
+            else:
+                st.error("? Time's up!")
+
+
+import streamlit as st
+import base64
+
+def set_background(image_file="assets/fl.png"):
+    with open(image_file, "rb") as f:
+        base64_image = base64.b64encode(f.read()).decode()
+
+    background_style = f"""
+        <style>
+            .stApp {{
+                background-image: url("data:image/png;base64,{base64_image}");
+                background-size: cover;
+            }}
+        </style>
+    """
+    st.markdown(background_style, unsafe_allow_html=True)
+
+
+def send_sms(to_number, message):
+    """Mock SMS sender - no Twilio call"""
+    print(f"📩 [MOCK] SMS to {to_number}: {message}")
