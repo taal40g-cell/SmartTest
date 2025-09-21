@@ -62,4 +62,3 @@ urllib3==2.5.0
 watchdog==6.0.0
 yarl==1.20.1
 werkzeug>=3.0.0
-werkzeug>=3.0.0
