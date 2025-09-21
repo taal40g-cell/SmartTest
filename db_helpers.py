@@ -10,15 +10,15 @@ import hashlib
 from datetime import datetime
 import traceback
 
-
-# ==============================
-# Third-Party Imports
-# ==============================
 import streamlit as st
 from passlib.context import CryptContext
 from passlib.exc import UnknownHashError
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
+# ==============================
+# Third-Party Imports
+# ==============================
 
 
 # ==============================
@@ -276,7 +276,6 @@ def ensure_super_admin_exists():
 
 # ensure_super_admin_exists is intentionally called here so the admin is available on module load
 ensure_super_admin_exists()
-
 
 # -----------------------------
 # Admin Login UI (Streamlit) — preserved logic
@@ -803,10 +802,6 @@ def show_question_tracker(questions, current_index, answers):
 
 
 # =====================================================================
-# QUESTION UPLOAD HANDLER (DB VERSION) (unchanged logic)
-# =====================================================================
-
-# =====================================================================
 # Load helpers for test duration (updated to use Config)
 # =====================================================================
 def get_test_duration(default=30):
@@ -1051,3 +1046,5 @@ def reset_test(student_id):
         raise e
     finally:
         db.close()
+
+
