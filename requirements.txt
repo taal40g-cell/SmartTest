@@ -6,6 +6,7 @@ altair==5.5.0
 attrs==25.3.0
 passlib==1.7.4
 bcrypt==4.0.1
+sqla1chemy==2.0.36
 blinker==1.9.0
 cachetools==6.1.0
 certifi==2025.7.14
