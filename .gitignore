@@ -6,9 +6,10 @@ __pycache__/
 *.pyo
 
 # ==============================
-# Environment files
+# Environment files (secrets)
 # ==============================
 *.env
+admin_config.json
 
 # ==============================
 # System files
@@ -28,7 +29,7 @@ Thumbs.db
 venv/
 
 # ==============================
-# Result PDFs
+# Result PDFs (not tracked)
 # ==============================
 result_pdfs/
 results/
@@ -39,20 +40,20 @@ results/
 qr_*.png
 
 # ==============================
-# JSON files: ignore all except questions/
+# JSON/CSV: ignore all except questions/
 # ==============================
 *.json
+*.csv
 !questions/*.json
+!questions/*.csv
 
 # ==============================
-# Optional: Excel / CSV backups
+# Optional: Database files
 # ==============================
-
 *.db
 smarttest.db
 
-
-
-
+# ==============================
+# Excel backups (ignore)
+# ==============================
 *.xlsx
-*.csv
