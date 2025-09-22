@@ -6,7 +6,8 @@ altair==5.5.0
 attrs==25.3.0
 passlib==1.7.4
 bcrypt==4.0.1
-sqla1chemy==2.0.36
+werkzeug>=2.3.7,<3
+SQLAlchemy==2.0.36
 blinker==1.9.0
 cachetools==6.1.0
 certifi==2025.7.14
@@ -61,4 +62,3 @@ tzdata==2025.2
 urllib3==2.5.0
 watchdog==6.0.0
 yarl==1.20.1
-werkzeug>=3.0.0
