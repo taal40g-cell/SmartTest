@@ -1,71 +1,30 @@
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-import json
+import streamlit as st
+import os
+from sqlalchemy import create_engine, inspect
+from sqlalchemy.exc import SQLAlchemyError
 
-# ------------------------------
-# Database setup
-# ------------------------------
-DATABASE_URL = "postgresql+psycopg2://postgres:1Onomatopoeia@localhost:5432/smarttest"
-engine = create_engine(DATABASE_URL)
-Session = sessionmaker(bind=engine)
-session = Session()
+# -----------------------------
+# Get DATABASE_URL from env
+# -----------------------------
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# ------------------------------
-# Normalization function
-# ------------------------------
-def normalize_text(text):
-    if not text:
-        return ""
-    return (
-        str(text)
-        .strip()
-        .lower()
-        .replace("₂", "2")
-        .replace("₃", "3")
-        .replace("₄", "4")
-        .replace("’", "'")
-        .replace("æ", "ae")  # fix special chars like She doesnÆt
-    )
+if not DATABASE_URL:
+    st.error("⚠️ DATABASE_URL not set in environment variables.")
+else:
+    st.write(f"Using DATABASE_URL: `{DATABASE_URL}`")
 
-# ------------------------------
-# Load questions
-# ------------------------------
-subject = "English"
-result = session.execute(
-    text("SELECT id, question_text, options, answer FROM questions WHERE subject = :subject LIMIT 5"),
-    {"subject": subject}
-).mappings().all()  # <--- returns dict-like rows
+    try:
+        # Create SQLAlchemy engine
+        engine = create_engine(DATABASE_URL)
 
-questions = []
-for row in result:
-    opts = row["options"]
-    if isinstance(opts, str):
-        try:
-            opts = json.loads(opts)
-        except:
-            opts = [o.strip() for o in opts.split(",") if o.strip()]
+        # Inspect tables
+        inspector = inspect(engine)
+        tables = inspector.get_table_names()
 
-    questions.append({
-        "id": row["id"],
-        "question_text": row["question_text"],
-        "options": opts,
-        "answer": normalize_text(row["answer"])
-    })
+        st.success("✅ Connected to database successfully!")
+        st.write("Tables found:")
+        st.write(tables)
 
-# ------------------------------
-# Example student answers
-# ------------------------------
-student_answers = {
-    row["id"]: normalize_text(ans)
-    for row, ans in zip(result, ["children", "went", "sad", "she doesn't like mangoes.", "mice"])
-}
-
-# ------------------------------
-# Check correctness
-# ------------------------------
-for q in questions:
-    selected = student_answers.get(q["id"], "")
-    is_correct = selected == q["answer"]
-    print(f"QID {q['id']}: Your answer: {selected}, Correct: {q['answer']}, Match: {is_correct}")
-
-session.close()
+    except SQLAlchemyError as e:
+        st.error("❌ Database connection failed!")
+        st.text(str(e))

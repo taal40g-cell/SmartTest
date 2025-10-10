@@ -39,6 +39,8 @@ def get_session():
     return SessionLocal()
 
 
+from sqlalchemy import text
+
 def test_db_connection() -> bool:
     """
     Simple test to check database connectivity.
@@ -46,7 +48,7 @@ def test_db_connection() -> bool:
     """
     try:
         with engine.connect() as conn:
-            conn.execute("SELECT 1")
+            conn.execute(text("SELECT 1"))  # ✅ wrap in text()
         return True
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
