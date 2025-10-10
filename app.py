@@ -1,19 +1,24 @@
 import streamlit as st
 from database import engine, test_db_connection
 from models import Base, Admin
-from db_helpers import ensure_super_admin_exists  # import the helper
+from db_helpers import ensure_super_admin_exists
 
-# ✅ Step 1: Create tables before any other imports that touch DB
+# ✅ Step 1: Create tables before anything else
 Base.metadata.create_all(bind=engine)
 
 # ✅ Step 2: Ensure default super admin exists
 ensure_super_admin_exists()
 
-# ✅ Import after DB setup to prevent "no such table" errors
+# ✅ Step 3: (Optional) Test DB connection
+if not test_db_connection():
+    st.error("❌ Database connection failed. Please check DATABASE_URL or network settings.")
+else:
+    st.success("✅ Database connected successfully.")
+
+# ✅ Step 4: Import UI components after DB setup
 from ui import set_background
 from selections.student import run_student_mode
 from selections.admin import run_admin_mode
-
 
 # --- Session state defaults ---
 st.session_state.setdefault("logged_in", False)
@@ -22,7 +27,6 @@ st.session_state.setdefault("menu_selection", "Student Mode")
 st.session_state.setdefault("trigger_refresh", False)
 st.session_state.setdefault("admin_username", "")
 st.session_state.setdefault("admin_logged_in", False)
-
 
 # --- Results page ---
 def results_page():
