@@ -1,17 +1,17 @@
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # =====================================
 # Database URL Configuration
 # =====================================
 
-# Try to get DATABASE_URL from environment (for Render or cloud)
+# Try environment variable first (Render or cloud)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# ✅ Fallback to SQLite if not found (for local development)
-if not DATABASE_URL:
-    print("⚠️ DATABASE_URL not found in environment variables. Using local SQLite database instead.")
+# ✅ Fallback to SQLite if not found or invalid
+if not DATABASE_URL or not isinstance(DATABASE_URL, str) or "://" not in DATABASE_URL:
+    print("⚠️ DATABASE_URL not found or invalid. Using local SQLite database instead.")
     DATABASE_URL = "sqlite:///smarttest.db"
 
 # =====================================
@@ -21,7 +21,14 @@ if not DATABASE_URL:
 # For SQLite, need a special argument to allow multithreading in Streamlit
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
-engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
+try:
+    engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
+except Exception as e:
+    print(f"❌ Failed to create database engine: {e}")
+    print("⚙️ Falling back to local SQLite database.")
+    DATABASE_URL = "sqlite:///smarttest.db"
+    connect_args = {"check_same_thread": False}
+    engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
 
 # =====================================
 # Session and Base
@@ -38,9 +45,6 @@ def get_session():
     """Create a new SQLAlchemy session."""
     return SessionLocal()
 
-
-from sqlalchemy import text
-
 def test_db_connection() -> bool:
     """
     Simple test to check database connectivity.
@@ -48,17 +52,16 @@ def test_db_connection() -> bool:
     """
     try:
         with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))  # ✅ wrap in text()
+            conn.execute(text("SELECT 1"))
+        print("✅ Database connection successful.")
         return True
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         return False
 
-
-
-# ==============================
+# =====================================
 # Student Helpers
-# ==============================
+# =====================================
 from models import Student
 from sqlalchemy.orm import Session
 
@@ -70,5 +73,5 @@ def get_student_by_code(db: Session, access_code: str):
     try:
         return db.query(Student).filter_by(access_code=access_code).first()
     except Exception as e:
-        print(f"Error fetching student by code: {e}")
+        print(f"❌ Error fetching student by code: {e}")
         return None
