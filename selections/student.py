@@ -15,10 +15,20 @@ from db_helpers import (
     show_question_tracker,
     can_take_test,
     get_users,
-    get_test_duration,get_student_by_access_code_db,
-    get_retake_db,
+    get_test_duration,
+    get_retake_db,get_student_by_access_code_db,
     decrement_retake,save_student_answers,load_progress, save_progress, clear_progress
 )
+def get_student_display(student) -> str:
+    """Return a formatted display string for both dict and ORM student."""
+    if hasattr(student, "__dict__"):  # ORM object
+        name = getattr(student, "name", "Student")
+        class_name = getattr(student, "class_name", "Unknown")
+    else:  # dictionary
+        name = student.get("name", "Student")
+        class_name = student.get("class_name", "Unknown")
+    return f"Welcome {name} | Class: {class_name.upper()}"
+
 from streamlit_autorefresh import st_autorefresh
 
 # ==============================
@@ -105,16 +115,30 @@ def run_student_mode():
         if access_code:
             student = get_student_by_access_code_db(access_code.strip().upper())
             if student:
+                # ✅ Convert ORM object → dictionary
+                student = {
+                    "id": student.id,
+                    "name": student.name,
+                    "class_name": student.class_name,
+                    "access_code": student.access_code,
+                    "can_retake": getattr(student, "can_retake", True)
+                }
+
                 st.session_state.logged_in = True
                 st.session_state.student = student
-                # clear any residual test state on fresh login
-                for k in ["test_started", "submitted", "questions", "answers", "current_q",
-                          "marked_for_review", "start_time", "duration", "five_min_warned", "saved_to_db"]:
+
+                # Clear any residual test state on fresh login
+                for k in [
+                    "test_started", "submitted", "questions", "answers", "current_q",
+                    "marked_for_review", "start_time", "duration", "five_min_warned", "saved_to_db"
+                ]:
                     st.session_state.pop(k, None)
-                st.success(f"Welcome, {student['name']} — Class {student['class_name']}")
+
+                st.info(get_student_display(student))
                 st.rerun()
             else:
-                st.error("Invalid login code ?")
+                st.error("Invalid login code ❌")
+
         st.stop()
 
     # ==============================
@@ -167,7 +191,8 @@ def run_student_mode():
     # Student Info
     # ==============================
     student = st.session_state.student
-    st.info(f"Welcome {student['name']} | Class: {student.get('class_name', 'Unknown').upper()}")
+    st.info(get_student_display(student))
+
 
     # ==============================
     # Subject Selection
@@ -177,8 +202,15 @@ def run_student_mode():
         "jhs2": ["English", "Math", "Science", "History", "Geography", "Physics", "Chemistry", "Biology", "ICT", "Economics"],
         "jhs3": ["English", "Math", "Science", "History", "Geography", "Physics", "Chemistry", "Biology", "ICT", "Economics"],
     }
-    subject_options = subjects_list.get(student.get('class_name', '').strip().lower().replace(" ", ""), [])
-    selected_subject = st.selectbox("Select Subject", subject_options, key="subject_select", label_visibility="collapsed")
+    class_name = student.get("class_name", "").strip().lower().replace(" ", "")
+    subject_options = subjects_list.get(class_name, [])
+
+    selected_subject = st.selectbox(
+        "Select Subject",
+        subject_options,
+        key="subject_select",
+        label_visibility="collapsed"
+    )
     st.session_state.subject = selected_subject
 
     # -----------------------------
