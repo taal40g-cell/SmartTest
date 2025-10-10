@@ -210,9 +210,6 @@ def ensure_super_admin_exists():
         db.close()
 
 
-# Run on module load
-ensure_super_admin_exists()
-
 
 # ==============================
 # Admin Login UI (Streamlit)
