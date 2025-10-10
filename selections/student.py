@@ -15,11 +15,10 @@ from db_helpers import (
     show_question_tracker,
     can_take_test,
     get_users,
-    get_test_duration,
+    get_test_duration,get_student_by_access_code_db,
     get_retake_db,
     decrement_retake,save_student_answers,load_progress, save_progress, clear_progress
 )
-from database import get_student_by_code
 from streamlit_autorefresh import st_autorefresh
 
 # ==============================
@@ -104,7 +103,7 @@ def run_student_mode():
         st.markdown("<div style='font-size:16px; font-weight:600;'>Enter Access Code:</div>", unsafe_allow_html=True)
         access_code = st.text_input("Access Code", placeholder="Code issued by Admin", key="access_code_input", label_visibility="collapsed")
         if access_code:
-            student = get_student_by_code(access_code.strip().upper())
+            student = get_student_by_access_code_db(access_code.strip().upper())
             if student:
                 st.session_state.logged_in = True
                 st.session_state.student = student
