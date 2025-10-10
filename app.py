@@ -1,27 +1,28 @@
 import streamlit as st
+from database import engine, test_db_connection
+from models import Base, Admin
+from db_helpers import ensure_super_admin_exists  # import the helper
+
+# ✅ Step 1: Create tables before any other imports that touch DB
+Base.metadata.create_all(bind=engine)
+
+# ✅ Step 2: Ensure default super admin exists
+ensure_super_admin_exists()
+
+# ✅ Import after DB setup to prevent "no such table" errors
 from ui import set_background
 from selections.student import run_student_mode
 from selections.admin import run_admin_mode
-from database import engine
-from models import Base
-
-# Create tables if not exist
-Base.metadata.create_all(bind=engine)
 
 
 # --- Session state defaults ---
-if "logged_in" not in st.session_state:
-    st.session_state.logged_in = False
-if "access_code" not in st.session_state:
-    st.session_state.access_code = ""
-if "menu_selection" not in st.session_state:
-    st.session_state.menu_selection = "Student Mode"
-if "trigger_refresh" not in st.session_state:
-    st.session_state.trigger_refresh = False
-if "admin_username" not in st.session_state:  # 🟢 important!
-    st.session_state.admin_username = ""
-if "admin_logged_in" not in st.session_state:  # 🟢 good to add too
-    st.session_state.admin_logged_in = False
+st.session_state.setdefault("logged_in", False)
+st.session_state.setdefault("access_code", "")
+st.session_state.setdefault("menu_selection", "Student Mode")
+st.session_state.setdefault("trigger_refresh", False)
+st.session_state.setdefault("admin_username", "")
+st.session_state.setdefault("admin_logged_in", False)
+
 
 # --- Results page ---
 def results_page():
@@ -34,9 +35,10 @@ def results_page():
     else:
         st.write("No access code provided. Use Student/Admin menu below.")
 
+
 # --- Main app ---
 def main():
-    set_background("assets/scr.png")
+    set_background("assets/sic.png")
 
     # Handle results page query param
     page = st.query_params.get("page", [None])[0]
@@ -58,25 +60,23 @@ def main():
         st.rerun()
 
     # --- Sidebar menu ---
+    st.sidebar.subheader("📋 Main Menu")
     menu_options = ["Student Mode", "Admin Panel", "Exit App"]
+    mode = st.sidebar.radio("Select Mode", menu_options, key="menu_selection")
 
-    # ✅ Simpler: only set once if not exists
-    st.session_state.setdefault("menu_selection", "Student Mode")
+    # --- Sidebar database test button ---
+    if st.sidebar.button("🧩 Test Database Connection"):
+        if test_db_connection():
+            st.sidebar.success("✅ Database connected successfully!")
+        else:
+            st.sidebar.error("❌ Failed to connect to database.")
 
-    # ✅ No manual index, just bind directly
-    mode = st.sidebar.radio(
-        "📋 Menu",
-        menu_options,
-        key="menu_selection"
-    )
-
-    # Mode selection
+    # --- Mode selection ---
     if mode == "Student Mode":
         run_student_mode()
     elif mode == "Admin Panel":
         run_admin_mode()
     elif mode == "Exit App":
-        # ✅ Clear everything & force rerun to reset UI instantly
         st.session_state.clear()
         st.session_state.menu_selection = "Student Mode"
         st.success("👋 All sessions cleared.")

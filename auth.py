@@ -1,36 +1,42 @@
-import pandas as pd
-import hashlib
-import os
-import streamlit as st
-def authenticate_student(access_code, users_file='users.csv'):
+# patch_fill_options.py
+import random
+from sqlalchemy import cast
+from sqlalchemy.dialects.postgresql import JSONB
+from database import get_session
+from models import Question
+
+def patch_questions_with_options():
+    db = get_session()
     try:
-        df = pd.read_csv(users_file)
-        user_row = df[df['access_code'] == access_code]
-        if not user_row.empty:
-            user_data = user_row.iloc[0].to_dict()
-            return user_data
+        # Fetch only questions with empty options ([])
+        questions = db.query(Question).filter(
+            cast(Question.options, JSONB) == []
+        ).all()
+
+        print(f"🔍 Found {len(questions)} questions with empty options")
+
+        if not questions:
+            print("✅ No questions need patching.")
+            return
+
+        for q in questions:
+            # You can customize distractors here per subject/class
+            distractors = ["Option A", "Option B", "Option C"]
+
+            # Make sure correct answer is included, randomize order
+            options = distractors + [q.correct_answer]
+            random.shuffle(options)
+
+            q.options = options
+            print(f"✅ Patched Q{q.id}: {q.question_text[:50]}...")
+
+        db.commit()
+        print(f"🎉 Successfully updated {len(questions)} questions")
     except Exception as e:
-        print(f"Authentication failed: {e}")
-    return None
+        db.rollback()
+        print(f"❌ Error: {e}")
+    finally:
+        db.close()
 
-
-
-def get_student_by_code(code):
-    if os.path.exists("users.csv"):
-        df = pd.read_csv("users.csv")
-
-        # Normalize column names
-        df.columns = df.columns.str.strip().str.lower()
-
-        if "access_code" not in df.columns:
-            st.error("❌ 'users.csv' is missing an 'access_code' column")
-            return None
-
-        student_row = df[df["access_code"] == code]
-        if not student_row.empty:
-            student_dict = student_row.iloc[0].to_dict()
-
-            # Make sure the access_code is always present
-            student_dict["access_code"] = code
-            return student_dict
-    return None
+if __name__ == "__main__":
+    patch_questions_with_options()
