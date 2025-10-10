@@ -19,7 +19,7 @@ from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Foreign
 # ==============================
 # Local Imports
 # ==============================
-from database import get_session, init_db, test_db_connection
+from database import  test_db_connection
 from models import (
     Admin,
     User,
