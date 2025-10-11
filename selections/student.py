@@ -16,7 +16,7 @@ from db_helpers import (
     can_take_test,
     get_users,
     get_test_duration,
-    get_retake_db,get_student_by_access_code_db,
+    get_retake_db,get_student_by_access_code_db,get_student_by_code,
     decrement_retake,save_student_answers,load_progress, save_progress, clear_progress
 )
 def get_student_display(student) -> str:

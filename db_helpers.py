@@ -447,6 +447,23 @@ def get_student_by_access_code_db(access_code):
     finally:
         db.close()
 
+    # =====================================
+    # Student Helpers
+    # =====================================
+
+
+
+def get_student_by_code(db: Session, access_code: str):
+    """
+    Fetch a student record by their unique access code.
+    Returns None if not found.
+    """
+    try:
+        return db.query(Student).filter_by(access_code=access_code).first()
+    except Exception as e:
+        print(f"❌ Error fetching student by code: {e}")
+        return None
+
 
 def update_student_submission_db(access_code):
     """Mark student as submitted = True."""

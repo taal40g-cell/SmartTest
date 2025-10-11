@@ -58,20 +58,3 @@ def test_db_connection() -> bool:
     except Exception as e:
         print(f"❌ Database connection failed: {e}")
         return False
-
-# =====================================
-# Student Helpers
-# =====================================
-from models import Student
-from sqlalchemy.orm import Session
-
-def get_student_by_code(db: Session, access_code: str):
-    """
-    Fetch a student record by their unique access code.
-    Returns None if not found.
-    """
-    try:
-        return db.query(Student).filter_by(access_code=access_code).first()
-    except Exception as e:
-        print(f"❌ Error fetching student by code: {e}")
-        return None
