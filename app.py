@@ -1,13 +1,19 @@
 import streamlit as st
 from database import engine, test_db_connection
-from models import Base, Admin
+from models import Base
 from db_helpers import ensure_super_admin_exists
 
 # ✅ Step 1: Create tables before anything else
-Base.metadata.create_all(bind=engine)
+with engine.begin() as conn:
+    Base.metadata.create_all(bind=conn)
+st.success("✅ All database tables created successfully!")
 
 # ✅ Step 2: Ensure default super admin exists
-ensure_super_admin_exists()
+try:
+    ensure_super_admin_exists()
+    st.info("👑 Super admin checked or created successfully.")
+except Exception as e:
+    st.error(f"⚠️ Error while ensuring super admin: {e}")
 
 # ✅ Step 3: (Optional) Test DB connection
 if not test_db_connection():

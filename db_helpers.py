@@ -309,6 +309,20 @@ def generate_access_code(length=6, db=None):
         if close_db:
             db.close()
 
+# db_helpers.py
+from database import get_session
+from contextlib import contextmanager
+
+@contextmanager
+def db_session():
+    """Context manager for safely using database sessions."""
+    db = get_session()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 
 def generate_unique_id(db=None):
     """Generate a unique internal ID for tracking students (UUID shortened)."""
@@ -1305,7 +1319,10 @@ def save_progress(access_code: str, subject: str, answers: list, current_q: int,
 # ==============================
 # 📥 Load Saved Progress
 # ==============================
-def load_progress(access_code: str, subject: str):
+
+from typing import Optional, Dict, List
+@st.cache_data(ttl=300)  # cache for 5 minutes
+def load_progress(access_code: str, subject: str) -> Optional[Dict]:
     """Return saved progress for a student and subject."""
     db = get_session()
     try:
@@ -1324,7 +1341,6 @@ def load_progress(access_code: str, subject: str):
         return None
     finally:
         db.close()
-
 # ==============================
 # 🧹 Clear Progress After Submission
 # ==============================

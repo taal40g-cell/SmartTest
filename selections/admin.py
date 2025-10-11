@@ -347,7 +347,13 @@ def run_admin_mode():
 
                 if result.get("success"):
                     st.success(
-                        f"🎯 {result['inserted']} questions uploaded successfully (replaced {result['deleted']} old ones).")
+                        f"🎯 {result['inserted']} questions uploaded successfully (replaced {result['deleted']} old ones)."
+                    )
+
+                    # 🧹 Clear cached student question data
+                    st.cache_data.clear()
+                    st.info("🧠 Cache cleared — new questions will now load instantly for students.")
+
                     st.session_state.pop("upload_file", None)
                     st.rerun()
                 else:

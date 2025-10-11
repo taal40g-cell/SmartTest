@@ -1,32 +1,52 @@
 import streamlit as st
 import os
 import base64
+import json
 from reportlab.lib.pagesizes import letter
+from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen import canvas
+from datetime import datetime
 from io import BytesIO
 
-def set_background(file_path, force_reload=True):
+# -----------------------------
+# Cached function to read & encode image
+# -----------------------------
+@st.cache_data(ttl=600)
+def get_base64_image(file_path: str) -> str:
+    """Read a local image file and return base64-encoded string."""
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"Background file not found: {file_path}")
+    with open(file_path, "rb") as f:
+        return base64.b64encode(f.read()).decode()
+
+
+# -----------------------------
+# Set Streamlit background
+# -----------------------------
+def set_background(file_path: str, force_reload: bool = False):
     """
     Sets a Streamlit app background using a local image.
-    Automatically encodes to base64 to avoid caching issues.
-    If force_reload=True, clears Streamlit cache to show the latest image.
+
+    Parameters:
+    - file_path: Path to the image file.
+    - force_reload: If True, clears the cached image to reload a new one.
     """
     if not os.path.exists(file_path):
         st.error(f"Background file not found: {file_path}")
         return
 
-    # Force clear caches if requested
+    # Force cache clear if requested
     if force_reload:
         try:
             st.cache_data.clear()
-            st.cache_resource.clear()
         except AttributeError:
-            # Older Streamlit versions may not have clear() methods
-            pass
+            pass  # Older Streamlit versions may not support clear()
 
-    with open(file_path, "rb") as f:
-        image_bytes = f.read()
-    base64_image = base64.b64encode(image_bytes).decode()
+    try:
+        base64_image = get_base64_image(file_path)
+    except Exception as e:
+        st.error(f"Failed to load background image: {e}")
+        return
 
     st.markdown(
         f"""
@@ -43,11 +63,6 @@ def set_background(file_path, force_reload=True):
     )
 
 
-
-
-
-import json
-import streamlit as st
 
 def render_test(questions, subject):
     """Render a stable one-question-per-page test with synced pagination."""
@@ -129,11 +144,7 @@ def render_test(questions, subject):
                 st.session_state.submitted = True
                 st.rerun()
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.utils import ImageReader
-from reportlab.pdfgen import canvas
-from datetime import datetime
-from io import BytesIO
+
 
 def generate_pdf(name, class_name, subject, correct, total, percent, details, logo_path=None):
     buffer = BytesIO()

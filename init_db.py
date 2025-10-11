@@ -1,31 +1,20 @@
-# init_db.py
-import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from models import Base, Admin
-from werkzeug.security import generate_password_hash
+"""
+Initialize the PostgreSQL database for SmartTests.
+Creates all tables (admins, students, results, etc.)
+and ensures the default super admin exists.
+"""
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("❌ DATABASE_URL environment variable is not set.")
+from models import Base
+from database import engine
+from db_helpers import ensure_super_admin_exists
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(bind=engine)
+print("🔄 Creating all database tables...")
 
-# Create all tables
-Base.metadata.create_all(engine)
-print("✅ Tables created successfully!")
+# Create all tables in PostgreSQL
+Base.metadata.create_all(bind=engine)
 
-# Ensure a super admin exists
-db = SessionLocal()
-try:
-    if not db.query(Admin).filter_by(username="super_admin").first():
-        admin = Admin(
-            username="super_admin",
-            password_hash=generate_password_hash("admin123")  # choose a secure password
-        )
-        db.add(admin)
-        db.commit()
-        print("✅ Super admin created (username: super_admin, password: admin123)")
-finally:
-    db.close()
+# Ensure default admin user
+print("👑 Checking or creating super admin...")
+ensure_super_admin_exists()
+
+print("✅ Database initialization complete! All tables ready.")
