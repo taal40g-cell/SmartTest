@@ -3,30 +3,43 @@ from database import engine, test_db_connection
 from models import Base
 from db_helpers import ensure_super_admin_exists
 
-# ✅ Step 1: Create tables before anything else
-with engine.begin() as conn:
-    Base.metadata.create_all(bind=conn)
-st.success("✅ All database tables created successfully!")
+# ==============================
+# Step 1: Create tables
+# ==============================
+try:
+    with engine.begin() as conn:
+        Base.metadata.create_all(bind=conn)
+    st.success("✅ All database tables created successfully!")
+except Exception as e:
+    st.error(f"❌ Failed to create tables: {e}")
 
-# ✅ Step 2: Ensure default super admin exists
+# ==============================
+# Step 2: Ensure super admin
+# ==============================
 try:
     ensure_super_admin_exists()
     st.info("👑 Super admin checked or created successfully.")
 except Exception as e:
     st.error(f"⚠️ Error while ensuring super admin: {e}")
 
-# ✅ Step 3: (Optional) Test DB connection
-if not test_db_connection():
-    st.error("❌ Database connection failed. Please check DATABASE_URL or network settings.")
-else:
+# ==============================
+# Step 3: Test DB connection
+# ==============================
+if test_db_connection():
     st.success("✅ Database connected successfully.")
+else:
+    st.error("❌ Database connection failed. Check DATABASE_URL or network settings.")
 
-# ✅ Step 4: Import UI components after DB setup
+# ==============================
+# Step 4: Import UI components
+# ==============================
 from ui import set_background
 from selections.student import run_student_mode
 from selections.admin import run_admin_mode
 
-# --- Session state defaults ---
+# ==============================
+# Step 5: Session state defaults
+# ==============================
 st.session_state.setdefault("logged_in", False)
 st.session_state.setdefault("access_code", "")
 st.session_state.setdefault("menu_selection", "Student Mode")
