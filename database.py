@@ -6,10 +6,10 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 # Database URL Configuration
 # =====================================
 
-# Try environment variable first (Render or cloud)
+# Prefer environment variable (Render/production)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-# ✅ Fallback to SQLite if not found or invalid
+# ✅ Fallback to local PostgreSQL or SQLite
 if not DATABASE_URL or not isinstance(DATABASE_URL, str) or "://" not in DATABASE_URL:
     print("⚠️ DATABASE_URL not found or invalid. Using local SQLite database instead.")
     DATABASE_URL = "sqlite:///smarttest.db"
@@ -18,10 +18,14 @@ if not DATABASE_URL or not isinstance(DATABASE_URL, str) or "://" not in DATABAS
 # Engine Setup
 # =====================================
 
-# For SQLite, need a special argument to allow multithreading in Streamlit
+# For SQLite, allow multi-threaded access (needed for Streamlit)
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 try:
+    # Ensure Render-style PostgreSQL URLs are compatible with SQLAlchemy
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+
     engine = create_engine(DATABASE_URL, connect_args=connect_args, echo=False)
 except Exception as e:
     print(f"❌ Failed to create database engine: {e}")
@@ -42,13 +46,13 @@ Base = declarative_base()
 # =====================================
 
 def get_session():
-    """Create a new SQLAlchemy session."""
+    """Create and return a new SQLAlchemy session."""
     return SessionLocal()
 
 def test_db_connection() -> bool:
     """
-    Simple test to check database connectivity.
-    Returns True if connection is successful, otherwise False.
+    Test database connection.
+    Returns True if connection succeeds, otherwise False.
     """
     try:
         with engine.connect() as conn:
